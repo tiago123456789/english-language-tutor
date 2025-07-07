@@ -1,0 +1,433 @@
+{
+  "name": "Language tutor AI",
+  "nodes": [
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Listen for incoming events').first().json.message.from.id }}",
+        "contextWindowLength": 10
+      },
+      "id": "577d5b9d-0c38-4f09-b17b-c3cae6b6ffca",
+      "name": "Window Buffer Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "position": [
+        2080,
+        480
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "options": {
+          "maxTokens": 200
+        }
+      },
+      "id": "a6a8bc8b-9409-4cc6-ae6b-52cd83682c12",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        1900,
+        480
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "openAiApi": {
+          "id": "Vmew9pagu3lKuyNw",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "16dfe541-81b2-4d7a-a5f7-7e5c995b567c",
+      "name": "Listen for incoming events",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "position": [
+        840,
+        180
+      ],
+      "webhookId": "f1e34369-4e22-4659-9cfa-b837d5f8e65f",
+      "typeVersion": 1,
+      "credentials": {
+        "telegramApi": {
+          "id": "poWTTrarQPYReWqx",
+          "name": "Tiago Language tutor AI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Listen for incoming events').first().json.message.from.id }}",
+        "text": "={{ $('Angie, AI Assistant 👩🏻‍🏫').item.json.output }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "Markdown",
+          "reply_to_message_id": "={{ $json.result.message_id }}"
+        }
+      },
+      "id": "cc1a126b-9eb7-42b5-8517-52d6e3a2ce13",
+      "name": "Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        3240,
+        180
+      ],
+      "typeVersion": 1.1,
+      "webhookId": "fe82f9be-6883-4815-9d22-cccc13eb7ba1",
+      "credentials": {
+        "telegramApi": {
+          "id": "poWTTrarQPYReWqx",
+          "name": "Tiago Language tutor AI"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "a0bf9719-4272-46f6-ab3b-eda6f7b44fd8",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.message.text }}",
+              "rightValue": ""
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "2a7d4eea-4c5f-40bc-b762-e2990bdf1753",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        1220,
+        180
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "id": "f47d1223-417e-447d-8aa2-ada7072939df",
+      "name": "Speech to Text",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "position": [
+        1600,
+        60
+      ],
+      "typeVersion": 1.3,
+      "credentials": {
+        "openAiApi": {
+          "id": "Vmew9pagu3lKuyNw",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fields": {
+          "values": [
+            {
+              "name": "text",
+              "stringValue": "={{ $json?.message?.text || \"\" }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9e8850a8-faa6-4e1f-81db-c34e45283c6b",
+      "name": "Voice or Text",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1060,
+        180
+      ],
+      "typeVersion": 3.2
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $('Listen for incoming events').item.json.message.voice.file_id }}"
+      },
+      "id": "01390ff0-79da-4e2c-8653-ad6d0e497ffb",
+      "name": "Get Voice File",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        1400,
+        120
+      ],
+      "typeVersion": 1.1,
+      "webhookId": "f14274e3-fe67-458f-b3f1-a380c3e0996c",
+      "credentials": {
+        "telegramApi": {
+          "id": "poWTTrarQPYReWqx",
+          "name": "Tiago Language tutor AI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "options": {
+          "systemMessage": "=Act as a professional language tutor who is able to discuss and hold engaging conversations about any topic I choose — from casual subjects to technical or professional ones. Help me improve my fluency, vocabulary, and grammar as we talk.\n\nDuring the conversation:\n- Gently correct my grammar or suggest better ways to express ideas\n- Introduce useful vocabulary or phrases when relevant\n- Keep the conversation flowing naturally and ask follow-up questions\n- You are a english language tutor, so return text only in english and return only in portuguese if student says to explain in portuguese\n- No repeat what the user said\n\nAt the end of the session, after I say “Finish class,” provide a brief summary with:\n\n- Grammar corrections or common mistakes I made\n- New vocabulary or phrases I used or learned\n- Tips or areas I should focus on to keep improving\n- Resume text in 200 words"
+        }
+      },
+      "id": "61f49488-f1e0-48de-9f17-3ffe715bcb3a",
+      "name": "Angie, AI Assistant 👩🏻‍🏫",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        2220,
+        180
+      ],
+      "typeVersion": 1.6,
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "content": "## Process Telegram Request\n",
+        "height": 278.75,
+        "width": 496.25,
+        "color": 5
+      },
+      "id": "bdf731e2-6276-4773-a356-f68eb3dbcc8f",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1020,
+        80
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "input": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        2660,
+        180
+      ],
+      "id": "af5a8aa3-40c6-4d3f-8267-507b8550eb82",
+      "name": "OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "Vmew9pagu3lKuyNw",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendAudio",
+        "chatId": "={{ $('Listen for incoming events').first().json.message.from.id }}",
+        "binaryData": true,
+        "binaryPropertyName": "=data",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2940,
+        180
+      ],
+      "id": "ef2f9065-1a52-4867-a7f6-abf497e95024",
+      "name": "Telegram1",
+      "webhookId": "d77c4cfd-df45-4d61-9e10-48cb43647405",
+      "credentials": {
+        "telegramApi": {
+          "id": "poWTTrarQPYReWqx",
+          "name": "Tiago Language tutor AI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Pegar credenciais do Telegram\n- Baixar o Telegram\n- Pesquisar por @BotFather\n- Criar bot. OBS: após criar o bot você irá receber as credenciais do Telegram que precisa",
+        "height": 220,
+        "width": 360
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        140,
+        -160
+      ],
+      "id": "b9ffe1ea-884b-4a21-9eb1-18ca9f3d4e11",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Pegar credenciais do OpenAi(ChatGPT)\n- Acessar o site https://platform.openai.com/docs/overview\n- Criar um conta ou logar\n- Acessar https://platform.openai.com/api-keys\n- Criar credencial para usar o serviços do OpenAi. PS: você precisa colocar dinheiro na sua conta para utilizar os serviços da OpenAi",
+        "height": 300,
+        "width": 360
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        600,
+        -160
+      ],
+      "id": "0cdc3dd8-d26b-4588-8769-819d056adec2",
+      "name": "Sticky Note2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Get Voice File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Angie, AI Assistant 👩🏻‍🏫",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Voice or Text": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Voice File": {
+      "main": [
+        [
+          {
+            "node": "Speech to Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Speech to Text": {
+      "main": [
+        [
+          {
+            "node": "Angie, AI Assistant 👩🏻‍🏫",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Angie, AI Assistant 👩🏻‍🏫",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Window Buffer Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Angie, AI Assistant 👩🏻‍🏫",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Listen for incoming events": {
+      "main": [
+        [
+          {
+            "node": "Voice or Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Angie, AI Assistant 👩🏻‍🏫": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Telegram1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram1": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "4236646d-3a93-4f93-9bc4-92d40a7785eb",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "36bb9ff08003b8e06dbf182560ce8e58c6f00f0699b87de3a910323538ab432a"
+  },
+  "id": "GOKJG1cjfhjOYqv6",
+  "tags": []
+}
