@@ -1,0 +1,685 @@
+{
+  "name": "English language tutor",
+  "nodes": [
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Listen for incoming events').first().json.message.from.id }}",
+        "contextWindowLength": 10
+      },
+      "id": "36fce9db-f0d0-46fe-8600-7bd60333e22d",
+      "name": "Window Buffer Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "position": [
+        2160,
+        640
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "6aaf99d8-19bb-4448-b20a-90b874ce4496",
+      "name": "Listen for incoming events",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "position": [
+        700,
+        340
+      ],
+      "webhookId": "f1e34369-4e22-4659-9cfa-b837d5f8e65f",
+      "typeVersion": 1,
+      "credentials": {
+        "telegramApi": {
+          "id": "rxtXyqgKT9iBGLxT",
+          "name": "Tiago - english language tutor"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "a0bf9719-4272-46f6-ab3b-eda6f7b44fd8",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.message.text }}",
+              "rightValue": ""
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "068ad1b4-0b2b-4856-ba48-08e40db82aa8",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        1080,
+        340
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $('Listen for incoming events').item.json.message.voice.file_id }}"
+      },
+      "id": "cf0b5d5e-61a2-4e54-84fa-30a23c99dbe9",
+      "name": "Get Voice File",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        1260,
+        280
+      ],
+      "typeVersion": 1.1,
+      "webhookId": "f14274e3-fe67-458f-b3f1-a380c3e0996c",
+      "credentials": {
+        "telegramApi": {
+          "id": "rxtXyqgKT9iBGLxT",
+          "name": "Tiago - english language tutor"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text || $(\"Get transcriptions on AssemblyAI\").item.json.text  }} ",
+        "options": {
+          "systemMessage": "=Act as a professional language tutor who is able to discuss and hold engaging conversations about any topic I choose — from casual subjects to technical or professional ones. Help me improve my fluency, vocabulary, and grammar as we talk.\n\nDuring the conversation:\n- Gently correct my grammar or suggest better ways to express ideas\n- Introduce useful vocabulary or phrases when relevant\n- Keep the conversation flowing naturally and ask follow-up questions\n- You are a english language tutor, so return text only in english and return only in portuguese if student says to explain in portuguese\n- No repeat what the user said\n\nAt the end of the session, after I say “Finish class,” provide a brief summary with:\n\n- Grammar corrections or common mistakes I made\n- New vocabulary or phrases I used or learned\n- Tips or areas I should focus on to keep improving\n- Resume text in 200 words"
+        }
+      },
+      "id": "82333c83-6510-40ee-ba98-534566646de5",
+      "name": "Angie, AI Assistant 👩🏻‍🏫",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        2460,
+        420
+      ],
+      "typeVersion": 1.6,
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "content": "## Process Telegram Request\n",
+        "height": 278.75,
+        "width": 496.25,
+        "color": 5
+      },
+      "id": "0bb15a35-8e8f-432e-9903-b8c072383c24",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        880,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Pegar credenciais do Telegram\n- Baixar o Telegram\n- Pesquisar por @BotFather\n- Criar bot. OBS: após criar o bot você irá receber as credenciais do Telegram que precisa",
+        "height": 220,
+        "width": 360
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        40,
+        -80
+      ],
+      "id": "d3bd00fa-1217-44aa-a7a9-85dab9c27f0e",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "fields": {
+          "values": [
+            {
+              "name": "text",
+              "stringValue": "={{ $json?.message?.text || \"\" }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d3ce4974-89f7-4ad1-a57b-5a2164f8ec3c",
+      "name": "Voice or Text",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        920,
+        340
+      ],
+      "typeVersion": 3.2
+    },
+    {
+      "parameters": {
+        "jsCode": "const text = `${$input.first().json.output}`.replaceAll(/([*#])/g, \"\")\n\nconst textSplitted = text.split(\" \");\n\nconst textGroupByEach200 = [\"\"];\nlet position = 0;\nlet count = 0;\nfor (let index = 0; index < textSplitted.length; index += 1) {\n  const text = textSplitted[index];\n\n  if (text.length + 2 + count < 200) {\n    textGroupByEach200[position] += \" \" + text;\n    count += 2 + text.length;\n  } else {\n    textGroupByEach200.push(\"\");\n    position += 1;\n    count = 0;\n  }\n}\n\nreturn { textGroupByEach200, total: textGroupByEach200.length }\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3180,
+        680
+      ],
+      "id": "e107ac51-78ad-4bb2-bed4-62d52fb11c6c",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "textGroupByEach200",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        3400,
+        680
+      ],
+      "id": "c4944dc4-f79a-4c9e-b1e6-a65a7b27b171",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "operation": "sendAudio",
+        "chatId": "6545428134",
+        "binaryData": true,
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3840,
+        680
+      ],
+      "id": "8ff5a1de-afe6-4893-ab7b-008667aa1554",
+      "name": "Telegram2",
+      "webhookId": "ddb7e55f-22c2-4b5b-a4b4-227e84241087",
+      "credentials": {
+        "telegramApi": {
+          "id": "rxtXyqgKT9iBGLxT",
+          "name": "Tiago - english language tutor"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Listen for incoming events').first().json.message.from.id }}",
+        "text": "={{ $('Angie, AI Assistant 👩🏻‍🏫').item.json.output }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "Markdown",
+          "reply_to_message_id": "="
+        }
+      },
+      "id": "9db56a56-033e-4328-b53c-1ce241ecb869",
+      "name": "Telegram3",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        4300,
+        680
+      ],
+      "typeVersion": 1.1,
+      "webhookId": "fe82f9be-6883-4815-9d22-cccc13eb7ba1",
+      "executeOnce": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "rxtXyqgKT9iBGLxT",
+          "name": "Tiago - english language tutor"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1940,
+        240
+      ],
+      "id": "a20550af-2b2c-48b4-8fb8-3737fb1a6b23",
+      "name": "Wait",
+      "webhookId": "036c58e2-0f24-4b39-8086-b2028d059adf"
+    },
+    {
+      "parameters": {
+        "model": "deepseek/deepseek-r1:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        2020,
+        620
+      ],
+      "id": "25433604-8655-4d30-af99-7a355244ea4e",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "rrtYMcOcxfgF3pbG",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "78f78d5e-3f35-40ab-b6c6-baeea1556307",
+              "leftValue": "true",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4060,
+        680
+      ],
+      "id": "c4b6dec4-280d-4f82-b6e4-d5d1eb2d0976",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.assemblyai.com/v2/upload",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "=data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1480,
+        240
+      ],
+      "id": "1019bd41-7965-4313-92e0-654a389b10f4",
+      "name": "Upload file on AssemblyAI",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "YC9XNnzAMaP24mTo",
+          "name": "AssemblyAI credentials"
+        },
+        "httpCustomAuth": {
+          "id": "Je4JDEicS9XkXP9w",
+          "name": "Custom Auth account"
+        },
+        "httpHeaderAuth": {
+          "id": "Y9CDrQoHeNMXZW1f",
+          "name": "Assembly ai"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.assemblyai.com/v2/transcript",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "5cb30f57e540423e96cbe36c93e7eb4f"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"audio_url\": \"{{ $json.upload_url }}\",\n  \"language_code\": \"en_us\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1700,
+        240
+      ],
+      "id": "a3f8268b-c918-49e4-8c01-e5f50be683ac",
+      "name": "Generate transcription - AssemblyAI",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "YC9XNnzAMaP24mTo",
+          "name": "AssemblyAI credentials"
+        },
+        "httpHeaderAuth": {
+          "id": "Y9CDrQoHeNMXZW1f",
+          "name": "Assembly ai"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.assemblyai.com/v2/transcript/{{ $json.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2160,
+        240
+      ],
+      "id": "1d68543d-2d09-4ec9-8b06-a218d327d467",
+      "name": "Get transcriptions on AssemblyAI",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "YC9XNnzAMaP24mTo",
+          "name": "AssemblyAI credentials"
+        },
+        "httpHeaderAuth": {
+          "id": "Y9CDrQoHeNMXZW1f",
+          "name": "Assembly ai"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Pegar credenciais do Assembly AI\n- Criar conta no https://www.assemblyai.com/ usando o plano gratuito.\n- Acessar link https://www.assemblyai.com/dashboard/api-keys \n- Copiar **Api Key**\n",
+        "height": 220,
+        "width": 360
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        420,
+        -80
+      ],
+      "id": "b7ce0a41-8663-4749-9dbd-f928ab6db968",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://tiago123456789--7b1bea60600811f0adab0224a6c84d84.web.val.run",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "text",
+              "value": "={{ $json.textGroupByEach200 }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3620,
+        680
+      ],
+      "id": "645a0347-ace6-4044-a09e-cf33b326d023",
+      "name": "Generate audio using Val.town",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "YC9XNnzAMaP24mTo",
+          "name": "AssemblyAI credentials"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Configurar função para gerar áudio usando Val.town\n- Criar conta no https://val.town/\n- Criar no botão 'New val'\n- Criei um arquivo com o código do link https://gist.github.com/tiago123456789/fe53d1ee0b8af8debeda4053f52aa196\n- Copiar a URL é colocar no node chamado 'Generate audio using Val.town' ",
+        "height": 300,
+        "width": 420
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        800,
+        -80
+      ],
+      "id": "f5232103-3cf1-43ca-9c49-ddac0cc07af8",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## Pegar credenciais do OpenRouter\n- Criar conta no https://openrouter.ai/\n- Acessar https://openrouter.ai/settings/keys\n- Criar **Api key**\n- Copiar **Api key** criada",
+        "height": 220,
+        "width": 360
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        40,
+        180
+      ],
+      "id": "56c9bc87-e912-4515-9ba0-080233e0699a",
+      "name": "Sticky Note4"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Get Voice File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Angie, AI Assistant 👩🏻‍🏫",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Voice File": {
+      "main": [
+        [
+          {
+            "node": "Upload file on AssemblyAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Window Buffer Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Angie, AI Assistant 👩🏻‍🏫",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Listen for incoming events": {
+      "main": [
+        [
+          {
+            "node": "Voice or Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Angie, AI Assistant 👩🏻‍🏫": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Voice or Text": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Generate audio using Val.town",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram2": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Get transcriptions on AssemblyAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Angie, AI Assistant 👩🏻‍🏫",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Telegram3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file on AssemblyAI": {
+      "main": [
+        [
+          {
+            "node": "Generate transcription - AssemblyAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate transcription - AssemblyAI": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get transcriptions on AssemblyAI": {
+      "main": [
+        [
+          {
+            "node": "Angie, AI Assistant 👩🏻‍🏫",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate audio using Val.town": {
+      "main": [
+        [
+          {
+            "node": "Telegram2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "84a38a5d-8037-444e-9f38-488ab04f01ed",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4e48073067c98941c0e9b86013547195208bc911ff861b585319d831d7845256"
+  },
+  "id": "Xty8ZodZffp3ZFg7",
+  "tags": []
+}
